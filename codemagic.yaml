@@ -1,0 +1,48 @@
+workflows:
+  remedios-ios-sem-assinatura:
+    name: Remédios iOS — IPA sem assinatura (para Sideloadly)
+    instance_type: mac_mini_m2
+    max_build_duration: 40
+    environment:
+      node: 22
+      xcode: latest
+    scripts:
+      - name: Instalar dependências
+        script: npm install --no-audit --no-fund
+      - name: Preparar web (fontes + ponte nativa)
+        script: npm run build
+      - name: Criar projeto iOS (Capacitor 8, Swift Package Manager)
+        script: |
+          if [ ! -d ios ]; then npx cap add ios; fi
+      - name: Ícone do app
+        script: npm run icone || echo "Aviso: ícone não gerado, usando o padrão do Capacitor"
+      - name: Sincronizar web e plugins
+        script: npx cap sync ios
+      - name: Ajustes do Info.plist
+        script: |
+          PLIST=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:0 string UIInterfaceOrientationPortrait" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 0.5.0" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$PLIST" 2>/dev/null || true
+      - name: Compilar sem assinatura
+        script: |
+          set -o pipefail
+          cd ios/App
+          if [ -d App.xcworkspace ]; then ALVO="-workspace App.xcworkspace"; else ALVO="-project App.xcodeproj"; fi
+          xcodebuild $ALVO -scheme App -configuration Release -sdk iphoneos \
+            -destination 'generic/platform=iOS' -derivedDataPath "$CM_BUILD_DIR/derivado" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee "$CM_BUILD_DIR/xcodebuild.log"
+      - name: Empacotar IPA
+        script: |
+          APP="$CM_BUILD_DIR/derivado/Build/Products/Release-iphoneos/App.app"
+          test -d "$APP" || { echo "App.app não encontrado"; exit 1; }
+          rm -rf "$CM_BUILD_DIR/pacote" && mkdir -p "$CM_BUILD_DIR/pacote/Payload"
+          cp -R "$APP" "$CM_BUILD_DIR/pacote/Payload/"
+          cd "$CM_BUILD_DIR/pacote" && zip -qry "$CM_BUILD_DIR/Remedios-sem-assinatura.ipa" Payload
+          ls -lh "$CM_BUILD_DIR/Remedios-sem-assinatura.ipa"
+    artifacts:
+      - Remedios-sem-assinatura.ipa
+      - xcodebuild.log

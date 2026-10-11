@@ -1,0 +1,14 @@
+{
+  "appId": "com.pietro.remedios",
+  "appName": "Remédios",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#F3F4F7",
+    "scrollEnabled": false
+  },
+  "plugins": {
+    "CapacitorHttp": { "enabled": true },
+    "LocalNotifications": { "presentationOptions": ["banner", "list", "sound"] }
+  }
+}

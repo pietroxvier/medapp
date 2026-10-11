@@ -1,0 +1,5 @@
+node_modules/
+ios/
+www/fonts/
+*.ipa
+.DS_Store

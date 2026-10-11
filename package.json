@@ -1,0 +1,30 @@
+{
+  "name": "remedios-ios",
+  "version": "0.5.0",
+  "private": true,
+  "description": "Remédios para iPhone (Capacitor) — mesma lógica do app de Windows v0.4",
+  "author": "Pietro",
+  "scripts": {
+    "fonts": "node scripts/copiar-fontes.mjs",
+    "bridge": "esbuild src/native.js --bundle --format=iife --target=safari15 --outfile=www/native.js",
+    "build": "npm run fonts && npm run bridge",
+    "icone": "capacitor-assets generate --ios --iconBackgroundColor \"#2F3CFF\" --splashBackgroundColor \"#F3F4F7\""
+  },
+  "dependencies": {
+    "@capacitor/clipboard": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@capacitor/local-notifications": "^8.0.0",
+    "@capacitor/preferences": "^8.0.0",
+    "@capacitor/share": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.0.0",
+    "@fontsource/bricolage-grotesque": "^5.0.0",
+    "@fontsource/dm-mono": "^5.0.0",
+    "@fontsource/ibm-plex-sans": "^5.0.0",
+    "esbuild": "^0.25.0"
+  },
+  "engines": { "node": ">=22" }
+}
